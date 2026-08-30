@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Raiyan Shop</title><style>
+body{font-family:Arial;margin:0;background:#0b1020;color:#fff}.wrap{max-width:900px;margin:auto;padding:20px}.card{background:#121a2e;padding:20px;border-radius:16px;margin:12px 0}input,button{padding:12px;border-radius:8px;margin:5px}input{background:#0c1324;color:#fff;border:1px solid #33415f}button{background:#ef4444;color:#fff;border:0;font-weight:bold}.hidden{display:none}.item{padding:12px;border-bottom:1px solid #263250}</style></head><body><div class="wrap">
+<div id="auth" class="card"><h1>Raiyan Shop</h1><input id="email" placeholder="Email"><input id="password" type="password" placeholder="Password"><input id="name" placeholder="Name (register only)"><br><button onclick="login()">Login</button><button onclick="register()">Register</button><p id="msg"></p></div>
+<div id="site" class="hidden"><div class="card"><h1>Welcome <span id="uname"></span></h1><p>Balance: ৳<b id="bal">0</b></p><button onclick="logout()">Logout</button></div><div class="card"><h2>Services</h2><div id="services">Loading...</div></div><div class="card"><h2>My Orders</h2><div id="orders">Loading...</div></div></div></div>
+<script>
+const API=location.origin+"/api";let T=localStorage.userToken;
+async function req(url,opt={}){opt.headers={...(opt.headers||{}), "Content-Type":"application/json"};if(T)opt.headers.Authorization="Bearer "+T;let r=await fetch(API+url,opt),d=await r.json();if(!r.ok)throw Error(d.error||"Request failed");return d}
+async function login(){try{let d=await req("/auth/login",{method:"POST",body:JSON.stringify({email:email.value,password:password.value})});T=d.token;localStorage.userToken=T;show()}catch(e){msg.textContent=e.message}}
+async function register(){try{let d=await req("/auth/register",{method:"POST",body:JSON.stringify({name:name.value,email:email.value,password:password.value})});T=d.token;localStorage.userToken=T;show()}catch(e){msg.textContent=e.message}}
+async function show(){auth.classList.add("hidden");site.classList.remove("hidden");let u=await req("/me");uname.textContent=u.name;bal.textContent=u.balance;load()}
+async function load(){let s=await req("/services");services.innerHTML=s.length?s.map(x=>`<div class=item><b>${x.name||x.title||x.id}</b><br>${x.description||""}</div>`).join(""):"No services yet";let o=await req("/my-orders");orders.innerHTML=o.length?o.map(x=>`<div class=item>${x.productName||"Order"} — ৳${x.price||0} — ${x.status}</div>`).join(""):"No orders"}
+function logout(){localStorage.removeItem("userToken");location.reload()}
+if(T)show().catch(()=>logout());
+</script></body></html>

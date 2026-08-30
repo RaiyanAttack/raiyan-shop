@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Raiyan Admin</title><style>
+body{font-family:Arial;margin:0;background:#0b1020;color:#fff}.wrap{max-width:1000px;margin:auto;padding:20px}.card{background:#121a2e;padding:20px;border-radius:16px;margin:12px 0}input,button{padding:12px;border-radius:8px;margin:5px}input{background:#0c1324;color:#fff;border:1px solid #33415f}button{background:#ef4444;color:#fff;border:0;font-weight:bold}.hidden{display:none}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{font-size:30px}.item{padding:12px;border-bottom:1px solid #263250}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style></head><body><div class="wrap">
+<div id="login" class="card"><h1>🔐 Admin</h1><input id="u" placeholder="User"><input id="p" type="password" placeholder="Password"><button onclick="doLogin()">LOGIN</button><p id="e"></p></div>
+<div id="app" class="hidden"><div class="card"><h1>Raiyan Admin Panel</h1><button onclick="logout()">Logout</button></div><div class="grid"><div class="card">Users<div id="users" class="stat">-</div></div><div class="card">Orders<div id="orders" class="stat">-</div></div><div class="card">Services<div id="services" class="stat">-</div></div></div>
+<div class="card"><h2>Add Service</h2><input id="sn" placeholder="Service name"><input id="sd" placeholder="Description"><button onclick="addService()">Add</button><p id="sm"></p></div>
+<div class="card"><h2>Users</h2><div id="ul">Loading...</div></div><div class="card"><h2>Orders</h2><div id="ol">Loading...</div></div></div></div>
+<script>
+const API=location.origin+"/api";let T=localStorage.adminToken;
+async function req(u,o={}){o.headers={...(o.headers||{}),"Content-Type":"application/json"};if(T)o.headers.Authorization="Bearer "+T;let r=await fetch(API+u,o),d=await r.json();if(!r.ok)throw Error(d.error||"Error");return d}
+async function doLogin(){try{let d=await req("/admin/login",{method:"POST",body:JSON.stringify({user:u.value,password:p.value})});T=d.token;localStorage.adminToken=T;show()}catch(x){e.textContent=x.message}}
+async function show(){login.classList.add("hidden");app.classList.remove("hidden");let s=await req("/admin/stats");users.textContent=s.users;orders.textContent=s.orders;services.textContent=s.services;let us=await req("/users");ul.innerHTML=us.map(x=>`<div class=item>${x.name} — ${x.email} — ৳${x.balance}</div>`).join("")||"No users";let os=await req("/orders");ol.innerHTML=os.map(x=>`<div class=item>${x.productName||"Order"} — ৳${x.price||0} — ${x.status}</div>`).join("")||"No orders"}
+async function addService(){try{await req("/services",{method:"POST",body:JSON.stringify({name:sn.value,description:sd.value})});sm.textContent="Saved";show()}catch(x){sm.textContent=x.message}}
+function logout(){localStorage.removeItem("adminToken");location.reload()}if(T)show().catch(()=>logout());
+</script></body></html>
